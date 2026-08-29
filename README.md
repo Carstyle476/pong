@@ -10,7 +10,7 @@ The visuals do not match because I wanted to use my own visual style.
 
 To run it, first install Python, then install pygame, then run pong.py
 
-You're the paddle on the right. _The AI plays perfectly... so good luck!_
+You're the paddle on the right. _The AI plays almost perfectly... so good luck!_
 
 (Not shippable, sorry!)
 
