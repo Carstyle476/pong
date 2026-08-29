@@ -7,16 +7,19 @@ WINDOW_NAME: str = "Pong!"
 TRANSPARENCY: int = 192
 SCORE_TEXT_DIST: int = 12
 
-MOVE_FORCE: int = 7500
-MOVE_SLOWDOWN: int = 10
-ENEMY_MOVE_FORCE: int = 7500
-ENEMY_MOVE_SLOWDOWN: int = 10
+MOVE_FORCE: int = 4800
+MOVE_SLOWDOWN: int = 8
+ENEMY_MOVE_FORCE: int = 4800
+ENEMY_MOVE_SLOWDOWN: int = 8
 
 PADDLE_SIZE: tuple[int, int] = (10, 90)
 BALL_RADIUS: int = 5
 START_DELAY: int = 1
 
-PARTICLE_SPAWN_NOISE: int = 25
+PREDICTION_NOISE: int = 30
+PREDICTION_NOISE_SCALING: float = 0.15
+
+PARTICLE_SPAWN_NOISE: int = 5
 PARTICLE_VEL_NOISE: int = 100
 PARTICLE_VEL_MULT: float = 0.5
 PARTICLE_SPAWN_MIN: int = 10
@@ -26,7 +29,7 @@ PARTICLE_SLOWDOWN: int = 2
 
 START_X: int = 200
 X_INCREMENT: int = 20
-X_MAX: int = 400
+X_MAX: int = 500
 START_Y: int = 200
 
 
@@ -92,7 +95,7 @@ class Paddle(pygame.sprite.Sprite):
         self.vel_y: float = vel_y
         self.ai: bool = ai
 
-    def update(self, dt: float, ball_pos: tuple[float, float], ball_vel: tuple[float, float]) -> None:
+    def update(self, dt: float, ball_pos: tuple[float, float], ball_vel: tuple[float, float], prediction_offset: float = 0) -> None:
         pending_accel_y: float = 0
 
         if self.ai:
@@ -102,6 +105,7 @@ class Paddle(pygame.sprite.Sprite):
                 while predicted < 0 or predicted > WINDOW_SIZE[1] - BALL_RADIUS * 2:
                     predicted = abs(predicted)
                     if predicted > WINDOW_SIZE[1] - BALL_RADIUS * 2: predicted -= (predicted - (WINDOW_SIZE[1] - BALL_RADIUS * 2)) * 2
+                predicted += prediction_offset
                 if predicted < self.y: pending_accel_y -= ENEMY_MOVE_FORCE
                 elif predicted > self.y + self.rect.height: pending_accel_y += ENEMY_MOVE_FORCE
         else:
@@ -181,27 +185,28 @@ def main() -> None:
     pygame.display.set_caption(WINDOW_NAME)
     clock: pygame.time.Clock = pygame.time.Clock()
 
-    # ugh i have to initialize these twice
     running: bool = True
     paused: bool = False
-    start_timer: float = START_DELAY
+    start_timer: float = 0
+    prediction_offset: float = 0
     player_score: int = 0
     enemy_score: int = 0
-    player_score_render: pygame.Surface = SMALL_FONT.render(str(player_score), True, (255, 255, 255))
-    enemy_score_render: pygame.Surface = SMALL_FONT.render(str(enemy_score), True, (255, 255, 255))
+    player_score_render: pygame.Surface = pygame.Surface((0, 0))
+    enemy_score_render: pygame.Surface = pygame.Surface((0, 0))
 
     particles: pygame.sprite.Group = pygame.sprite.Group()
     all_sprites: pygame.sprite.Group = pygame.sprite.Group()
-    player: Paddle = Paddle(PADDLE_SIZE, WINDOW_SIZE[0] - PADDLE_SIZE[0] * 2, WINDOW_SIZE[1] / 2 - PADDLE_SIZE[1] / 2)
-    enemy: Paddle = Paddle(PADDLE_SIZE, PADDLE_SIZE[0], WINDOW_SIZE[1] / 2 - PADDLE_SIZE[1] / 2, ai=True)
-    ball: Ball = Ball(wall_bounce, BALL_RADIUS, WINDOW_SIZE[0] / 2 - BALL_RADIUS, WINDOW_SIZE[1] / 2 - BALL_RADIUS)
+    player: Paddle = Paddle((0, 0), 0, 0)
+    enemy: Paddle = Paddle((0, 0), 0, 0)
+    ball: Ball = Ball(wall_bounce, 0, 0, 0)
 
     def setup_game(reset_score: bool) -> None:
         # questionable line of code
-        nonlocal paused, start_timer, player_score, enemy_score, player_score_render, enemy_score_render, particles, all_sprites, player, enemy, ball
+        nonlocal paused, start_timer, prediction_offset, player_score, enemy_score, player_score_render, enemy_score_render, particles, all_sprites, player, enemy, ball
 
         paused = False
         start_timer = START_DELAY
+        prediction_offset = random() * 2 * PREDICTION_NOISE - PREDICTION_NOISE
         if reset_score:
             player_score = 0
             enemy_score = 0
@@ -243,6 +248,7 @@ def main() -> None:
                             menu_move.play()
                     elif event.key == pygame.K_ESCAPE:
                         paused = True
+                        if start_timer != 0: start_timer = START_DELAY
                         menu_move.play()
 
         dt: float = clock.tick() / 1000
@@ -265,7 +271,7 @@ def main() -> None:
                 ball_pos: tuple[float, float] = (ball.x, ball.y)
                 ball_vel: tuple[float, float] = (ball.vel_x, ball.vel_y)
                 player.update(dt, ball_pos, ball_vel)
-                enemy.update(dt, ball_pos, ball_vel)
+                enemy.update(dt, ball_pos, ball_vel, prediction_offset)
                 ball.update(dt)
                 particles.update(dt)
 
@@ -296,13 +302,14 @@ def main() -> None:
                         particles.add(Particle(
                             wall_bounce,
                             PARTICLE_RADIUS,
-                            ball.x + ball.radius - PARTICLE_RADIUS,
-                            ball.y + ball.radius - PARTICLE_RADIUS,
+                            ball.x + ball.radius - PARTICLE_RADIUS + random() * 2 * PARTICLE_SPAWN_NOISE - PARTICLE_SPAWN_NOISE,
+                            ball.y + ball.radius - PARTICLE_RADIUS + random() * 2 * PARTICLE_SPAWN_NOISE - PARTICLE_SPAWN_NOISE,
                             ball.vel_x * PARTICLE_VEL_MULT + random() * 2 * PARTICLE_VEL_NOISE - PARTICLE_VEL_NOISE,
                             ball.vel_y * PARTICLE_VEL_MULT + random() * 2 * PARTICLE_VEL_NOISE - PARTICLE_VEL_NOISE,
                             random() * 0.2 - 0.1 + 0.9
                         ))
-
+                    total_noise: float = PREDICTION_NOISE + PREDICTION_NOISE_SCALING * (ball.vel_x ** 2 + ball.vel_y ** 2) ** 0.5
+                    prediction_offset = random() * 2 * total_noise - total_noise
 
                 to_delete: list[Particle] = []
                 for particle in particles:
