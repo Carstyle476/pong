@@ -53,7 +53,7 @@ class Ball(pygame.sprite.Sprite):
 
         if self.y < 0 or self.y > WINDOW_SIZE[1] - self.radius * 2:
             if self.y < 0: self.y = abs(self.y)
-            else: self.y -= self.y - (WINDOW_SIZE[1] - self.radius * 2)
+            else: self.y -= (self.y - (WINDOW_SIZE[1] - self.radius * 2)) * 2
             self.vel_y *= -1
             self.wall_bounce_sound.play()
 
@@ -180,6 +180,8 @@ def main() -> None:
         (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] * 2 // 3)
     )
 
+    final_score_display: tuple[pygame.Surface, pygame.Rect] = (pygame.Surface((0, 0)), pygame.Rect(0, 0, 0, 0))
+
     screen: pygame.Surface = pygame.display.set_mode(WINDOW_SIZE, pygame.SCALED, vsync=1)
     transparent: pygame.Surface = pygame.Surface(WINDOW_SIZE, pygame.SRCALPHA)
     pygame.display.set_caption(WINDOW_NAME)
@@ -242,6 +244,7 @@ def main() -> None:
                     if paused:
                         if event.key == pygame.K_ESCAPE:
                             state = 0
+                            final_score_display = text_rect_center(SMALL_FONT, f"Your final score: {player_score} against {enemy_score}", (255, 255, 255), (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 4))
                             menu_move.play()
                         elif event.key == pygame.K_SPACE:
                             paused = False
@@ -259,6 +262,7 @@ def main() -> None:
             screen.blit(MENU_TEXT[0], MENU_TEXT[1])
             screen.blit(MENU_INSTRUCTIONS[0], MENU_INSTRUCTIONS[1])
             screen.blit(CONTROL_INSTRUCTIONS[0], CONTROL_INSTRUCTIONS[1])
+            screen.blit(final_score_display[0], final_score_display[1])
         elif state == 1: # game
             if not(paused):
                 if start_timer < 0:
