@@ -1,6 +1,8 @@
 
 # Pong!
 
+![A screenshot of the game.](screenshot.png)
+
 This is my clone of Pong, one of the first computer games.
 
 The visuals do not match because I wanted to use my own visual style.
@@ -8,7 +10,7 @@ The visuals do not match because I wanted to use my own visual style.
 
 To run it, first install Python, then install pygame, then run pong.py
 
-You're the paddle on the right. The AI plays _perfectly..._ so good luck!
+You're the paddle on the right. _The AI plays perfectly... so good luck!_
 
 (Not shippable, sorry!)
 

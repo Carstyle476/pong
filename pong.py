@@ -219,8 +219,6 @@ def main() -> None:
 
     # 0 = menu
     # 1 = game
-    # 2 = game over
-    # transitions: 0-1, 1-2, 2-0, 2-1
     state: int = 0
 
 
