@@ -8,9 +8,11 @@ This is my clone of Pong, one of the first computer games.
 The visuals do not match because I wanted to use my own visual style.
 (Even if it is similar.)
 
+The game is "endless"; just keep racking up points and see how many you can get over the AI.
+
 To run it, first install Python, then install pygame, then run pong.py
 
-You're the paddle on the right. _The AI plays almost perfectly... so good luck!_
+You're the paddle on the right. _The AI plays very well... so good luck!_
 
 (Not shippable, sorry!)
 

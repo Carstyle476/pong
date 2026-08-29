@@ -16,8 +16,8 @@ PADDLE_SIZE: tuple[int, int] = (10, 90)
 BALL_RADIUS: int = 5
 START_DELAY: int = 1
 
-PREDICTION_NOISE: int = 20
-PREDICTION_NOISE_SCALING: float = 0.1
+PREDICTION_NOISE: int = 15
+PREDICTION_NOISE_SCALING: float = 0.075
 
 PARTICLE_SPAWN_NOISE: int = 5
 PARTICLE_VEL_NOISE: int = 100
@@ -100,7 +100,7 @@ class Paddle(pygame.sprite.Sprite):
 
         if self.ai:
             if ball_vel[0] < 0:
-                # perfect prediction code
+                # perfect prediction code with optional offset for imperfect prediction
                 predicted: float = ball_pos[1] + ball_vel[1] * (ball_pos[0] - self.x + self.rect.width / 2) / abs(ball_vel[0])
                 while predicted < 0 or predicted > WINDOW_SIZE[1] - BALL_RADIUS * 2:
                     predicted = abs(predicted)
@@ -154,7 +154,7 @@ def main() -> None:
 
     MENU_INSTRUCTIONS: tuple[pygame.Surface, pygame.Rect] = text_rect_center(
         SMALL_FONT,
-        "Space to play, Escape to exit",
+        "Space to play, Escape to pause/exit",
         (255, 255, 255),
         (WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2)
     )
