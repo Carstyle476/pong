@@ -11,3 +11,5 @@ To run it, first install Python, then install pygame, then run pong.py
 You're the paddle on the right. The AI plays _perfectly..._ so good luck!
 
 (Not shippable, sorry!)
+
+[Credits](CREDITS.md)
